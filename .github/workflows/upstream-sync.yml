@@ -1,0 +1,69 @@
+name: Sync with upstream
+
+on:
+  schedule:
+    - cron: '0 3 * * 1' # Every Monday at 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git user
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/zalando/spilo.git
+          git fetch upstream --tags
+
+      - name: Rebase fork default branch onto upstream
+        run: |
+          git checkout master
+          git rebase upstream/master || {
+            echo 'Rebase failed, aborting.'
+            git rebase --abort
+            exit 1
+          }
+
+      - name: Check for changes after rebase
+        id: changes
+        run: |
+          if git diff --quiet origin/master; then
+            echo "no_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "no_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push rebase branch if changes
+        if: steps.changes.outputs.no_changes == 'false'
+        run: |
+          git push origin HEAD:upstream-rebase --force
+
+      - name: Create or update PR
+        if: steps.changes.outputs.no_changes == 'false'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: upstream-rebase
+          base: master
+          title: 'Rebase: Sync with upstream/master'
+          body: 'Automated rebase with upstream changes.'
+          commit-message: 'chore: rebase with upstream/master'
+          delete-branch: false
+
+      - name: Replicate new tags from upstream
+        run: |
+          git fetch upstream --tags
+          for tag in $(git tag -l); do
+            if ! git ls-remote --tags origin | grep -q refs/tags/$tag; then
+              git push origin refs/tags/$tag
+            fi
+          done
