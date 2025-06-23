@@ -149,8 +149,15 @@ for version in $DEB_PG_SUPPORTED_VERSIONS; do
         EXTRA_EXTENSIONS+=("plprofiler" "pg_mon-${PG_MON_COMMIT}")
     fi
 
-    curl -sL "https://github.com/tensorchord/VectorChord/releases/download/${VCHORD}/postgresql-${version}-vchord_${VCHORD}-1_amd64.deb" > "postgresql-${version}-vchord_${VCHORD}-1_amd64.deb"
-    apt-get install "./postgresql-${version}-vchord_${VCHORD}-1_amd64.deb"
+    arch=$(uname -m)
+    case "$arch" in
+        x86_64) ARCH="amd64" ;;
+        aarch64) ARCH="arm64" ;;
+        *) echo "Unsupported architecture: $arch"
+           exit 1 ;;
+    esac
+    curl -sL "https://github.com/tensorchord/VectorChord/releases/download/${VCHORD}/postgresql-${version}-vchord_${VCHORD}-1_${ARCH}.deb" > "postgresql-${version}-vchord_${VCHORD}-1_${ARCH}.deb"
+    apt-get install "./postgresql-${version}-vchord_${VCHORD}-1_${ARCH}.deb"
 
     for n in bg_mon-${BG_MON_COMMIT} \
             pg_auth_mon-${PG_AUTH_MON_COMMIT} \
