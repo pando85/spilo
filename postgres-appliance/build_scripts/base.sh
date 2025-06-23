@@ -149,10 +149,8 @@ for version in $DEB_PG_SUPPORTED_VERSIONS; do
         EXTRA_EXTENSIONS+=("plprofiler" "pg_mon-${PG_MON_COMMIT}")
     fi
 
-    if [ "$version" -ge 14 ]; then
-        curl -L https://github.com/tensorchord/VectorChord/releases/download/${VCHORD}/postgresql-${version}-vchord_${VCHORD}-1_amd64.deb > postgresql-${version}-vchord_${VCHORD}-1_amd64.deb
-        apt-get install ./postgresql-${version}-vchord_${VCHORD}-1_amd64.deb
-    fi
+    curl -sL "https://github.com/tensorchord/VectorChord/releases/download/${VCHORD}/postgresql-${version}-vchord_${VCHORD}-1_amd64.deb" > "postgresql-${version}-vchord_${VCHORD}-1_amd64.deb"
+    apt-get install "./postgresql-${version}-vchord_${VCHORD}-1_amd64.deb"
 
     for n in bg_mon-${BG_MON_COMMIT} \
             pg_auth_mon-${PG_AUTH_MON_COMMIT} \
