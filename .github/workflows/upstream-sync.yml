@@ -32,6 +32,7 @@ jobs:
             git rebase --abort
             exit 1
           }
+          git rebase origin/master --reapply-cherry-picks
 
       - name: Check for changes after rebase
         id: changes
@@ -59,11 +60,3 @@ jobs:
           commit-message: 'chore: rebase with upstream/master'
           delete-branch: false
 
-      - name: Replicate new tags from upstream
-        run: |
-          git fetch upstream --tags || true
-          for tag in $(git tag -l); do
-            if ! git ls-remote --tags origin | grep -q refs/tags/$tag; then
-              git push origin refs/tags/$tag
-            fi
-          done
