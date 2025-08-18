@@ -1,0 +1,48 @@
+name: Sync with upstream
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Git user
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Re-tag upstream tags on origin
+        run: |
+          git remote add upstream https://github.com/zalando/spilo.git
+          git fetch upstream --tags || true
+          for tag in $(git tag -l); do
+            if ! git ls-remote --tags origin | grep -q refs/tags/$tag; then
+              echo new tag $tag
+              # Get upstream tag commit info
+              upstream_commit=$(git rev-list -n 1 upstream/$tag)
+              author=$(git show -s --format='%an <%ae>' $upstream_commit)
+              message=$(git show -s --format='%s' $upstream_commit)
+
+              # Search for matching commit in origin by author and message
+              origin_commit=$(git log origin/master --pretty=format:'%H %an <%ae> %s' | grep "$author $message" | head -n1 | awk '{print $1}')
+              if [ -n "$origin_commit" ]; then
+                echo "Retagging $tag on origin at $origin_commit"
+                git tag -f $tag $origin_commit
+                echo git push origin $tag --force
+              else
+                echo "No matching commit found in origin for tag $tag (author/message: $author / $message)"
+              fi
+            fi
+          done
+
+
+
+
