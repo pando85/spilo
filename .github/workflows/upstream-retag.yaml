@@ -1,4 +1,4 @@
-name: Sync with upstream
+name: Retag upstream tags
 
 on:
   push:
@@ -36,7 +36,7 @@ jobs:
               if [ -n "$origin_commit" ]; then
                 echo "Retagging $tag on origin at $origin_commit"
                 git tag -f $tag $origin_commit
-                echo git push origin $tag --force
+                git push origin $tag --force
               else
                 echo "No matching commit found in origin for tag $tag (author/message: $author / $message)"
               fi
