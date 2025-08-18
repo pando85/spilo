@@ -61,7 +61,7 @@ jobs:
 
       - name: Replicate new tags from upstream
         run: |
-          git fetch upstream --tags
+          git fetch upstream --tags || true
           for tag in $(git tag -l); do
             if ! git ls-remote --tags origin | grep -q refs/tags/$tag; then
               git push origin refs/tags/$tag
