@@ -6,7 +6,7 @@ on:
     - master
 
 jobs:
-  sync:
+  retag:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout fork repository
@@ -27,7 +27,7 @@ jobs:
             if ! git ls-remote --tags origin | grep -q refs/tags/$tag; then
               echo new tag $tag
               # Get upstream tag commit info
-              upstream_commit=$(git rev-list -n 1 upstream/$tag)
+              upstream_commit=$(git rev-list -n 1 $tag)
               author=$(git show -s --format='%an <%ae>' $upstream_commit)
               message=$(git show -s --format='%s' $upstream_commit)
 
