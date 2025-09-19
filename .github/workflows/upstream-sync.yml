@@ -22,7 +22,7 @@ jobs:
       - name: Add upstream remote
         run: |
           git remote add upstream https://github.com/zalando/spilo.git || echo 'upstream remote already exists'
-          git fetch upstream --tags || { echo 'Failed to fetch upstream'; exit 1; }
+          git fetch upstream --tags || true
 
       - name: Rebase fork default branch onto upstream
         run: |
