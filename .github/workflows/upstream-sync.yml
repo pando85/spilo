@@ -24,29 +24,26 @@ jobs:
           git remote add upstream https://github.com/zalando/spilo.git || echo 'upstream remote already exists'
           git fetch upstream || true
 
-      - name: Merge upstream changes into master
+      - name: Rebase fork default branch onto upstream
         run: |
           git checkout master
-          git merge --no-ff upstream/master || {
-            echo 'Merge failed, aborting.'
+          git rebase upstream/master || {
+            echo 'Rebase failed, aborting.'
+            git rebase --abort
             exit 1
           }
+          git rebase origin/master --reapply-cherry-picks
 
-      - name: Check for changes after merge
+      - name: Check for changes after rebase
         id: changes
         run: |
-          echo "Comparing local master with origin/master:"
-          git log --oneline origin/master..HEAD || echo "No commits ahead"
-          # Check if there are new commits (not just file differences)
-          if [ "$(git rev-list --count origin/master..HEAD)" -eq 0 ]; then
+          if git diff --quiet origin/master; then
             echo "no_changes=true" >> $GITHUB_OUTPUT
-            echo "No new commits found"
           else
             echo "no_changes=false" >> $GITHUB_OUTPUT
-            echo "New commits found: $(git rev-list --count origin/master..HEAD)"
           fi
 
-      - name: Push merge branch if changes
+      - name: Push rebase branch if changes
         if: steps.changes.outputs.no_changes == 'false'
         run: |
           git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/pando85/spilo.git HEAD:upstream-rebase --force
@@ -58,8 +55,8 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           branch: upstream-rebase
           base: master
-          title: 'Merge: Sync with upstream/master'
-          body: 'Automated merge with upstream changes.'
-          commit-message: 'chore: merge with upstream/master'
+          title: 'Rebase: Sync with upstream/master'
+          body: 'Automated rebase with upstream changes.'
+          commit-message: 'chore: rebase with upstream/master'
           delete-branch: false
 
