@@ -21,8 +21,8 @@ jobs:
 
       - name: Add upstream remote
         run: |
-          git remote add upstream https://github.com/zalando/spilo.git
-          git fetch upstream --tags || true
+          git remote add upstream https://github.com/zalando/spilo.git || echo 'upstream remote already exists'
+          git fetch upstream --tags || { echo 'Failed to fetch upstream'; exit 1; }
 
       - name: Rebase fork default branch onto upstream
         run: |
@@ -46,13 +46,13 @@ jobs:
       - name: Push rebase branch if changes
         if: steps.changes.outputs.no_changes == 'false'
         run: |
-          git push origin HEAD:upstream-rebase --force
+          git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/pando85/spilo.git HEAD:upstream-rebase --force
 
       - name: Create or update PR
         if: steps.changes.outputs.no_changes == 'false'
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_PAT }}
           branch: upstream-rebase
           base: master
           title: 'Rebase: Sync with upstream/master'
