@@ -32,7 +32,6 @@ jobs:
             git rebase --abort
             exit 1
           }
-          git rebase origin/master --reapply-cherry-picks
 
       - name: Check for changes after rebase
         id: changes
