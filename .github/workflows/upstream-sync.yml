@@ -24,17 +24,15 @@ jobs:
           git remote add upstream https://github.com/zalando/spilo.git || echo 'upstream remote already exists'
           git fetch upstream || true
 
-      - name: Rebase fork default branch onto upstream
+      - name: Merge upstream changes into master
         run: |
           git checkout master
-          git rebase upstream/master || {
-            echo 'Rebase failed, aborting.'
-            git rebase --abort
+          git merge --no-ff upstream/master || {
+            echo 'Merge failed, aborting.'
             exit 1
           }
-          git rebase origin/master --reapply-cherry-picks
 
-      - name: Check for changes after rebase
+      - name: Check for changes after merge
         id: changes
         run: |
           if git diff --quiet origin/master; then
