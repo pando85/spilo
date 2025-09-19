@@ -22,7 +22,7 @@ jobs:
       - name: Re-tag upstream tags on origin
         run: |
           git remote add upstream https://github.com/zalando/spilo.git || echo 'upstream remote already exists'
-          git fetch upstream --tags || { echo 'Failed to fetch upstream'; exit 1; }
+          git fetch upstream --tags || true
           for tag in $(git tag -l); do
             if ! git ls-remote --tags origin | grep -q refs/tags/$tag; then
               echo new tag $tag
