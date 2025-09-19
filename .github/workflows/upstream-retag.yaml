@@ -21,8 +21,8 @@ jobs:
 
       - name: Re-tag upstream tags on origin
         run: |
-          git remote add upstream https://github.com/zalando/spilo.git
-          git fetch upstream --tags || true
+          git remote add upstream https://github.com/zalando/spilo.git || echo 'upstream remote already exists'
+          git fetch upstream --tags || { echo 'Failed to fetch upstream'; exit 1; }
           for tag in $(git tag -l); do
             if ! git ls-remote --tags origin | grep -q refs/tags/$tag; then
               echo new tag $tag
@@ -36,7 +36,8 @@ jobs:
               if [ -n "$origin_commit" ]; then
                 echo "Retagging $tag on origin at $origin_commit"
                 git tag -f $tag $origin_commit
-                git push origin $tag --force
+                # Use PAT for pushing tags
+                git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/pando85/spilo.git $tag --force
               else
                 echo "No matching commit found in origin for tag $tag (author/message: $author / $message)"
               fi
