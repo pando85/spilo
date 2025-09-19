@@ -34,10 +34,18 @@ jobs:
               # Search for matching commit in origin by author and message
               origin_commit=$(git log origin/master --pretty=format:'%H %an <%ae> %s' | grep "$author $message" | head -n1 | awk '{print $1}')
               if [ -n "$origin_commit" ]; then
-                echo "Retagging $tag on origin at $origin_commit"
-                git tag -f $tag $origin_commit
-                # Use PAT for pushing tags
-                git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/pando85/spilo.git $tag --force
+                # Find the merge commit that brought this change
+                merge_commit=$(git log origin/master --merges --pretty=format:'%H' --ancestry-path $origin_commit..origin/master | tail -n1)
+                if [ -n "$merge_commit" ]; then
+                  echo "Retagging $tag on merge commit $merge_commit (original: $origin_commit)"
+                  git tag -f $tag $merge_commit
+                  # Use PAT for pushing tags
+                  git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/pando85/spilo.git $tag --force
+                else
+                  echo "No merge commit found for $origin_commit, using original commit"
+                  git tag -f $tag $origin_commit
+                  git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/pando85/spilo.git $tag --force
+                fi
               else
                 echo "No matching commit found in origin for tag $tag (author/message: $author / $message)"
               fi
