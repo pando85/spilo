@@ -35,15 +35,10 @@ jobs:
       - name: Check for changes after merge
         id: changes
         run: |
-          echo "Comparing local master with origin/master:"
-          git log --oneline origin/master..HEAD || echo "No commits ahead"
-          # Check if there are new commits (not just file differences)
-          if [ "$(git rev-list --count origin/master..HEAD)" -eq 0 ]; then
+          if git diff --quiet origin/master; then
             echo "no_changes=true" >> $GITHUB_OUTPUT
-            echo "No new commits found"
           else
             echo "no_changes=false" >> $GITHUB_OUTPUT
-            echo "New commits found: $(git rev-list --count origin/master..HEAD)"
           fi
 
       - name: Push rebase branch if changes
